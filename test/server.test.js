@@ -38,6 +38,21 @@ test("registration number", async () => {
   assert.equal(json.registrationNumber, "T7000012050002");
 });
 
+test("the MCP checker rejects a transaction date that does not exist", async () => {
+  const { json } = await call("japan_invoice_check", {
+    invoice: {
+      issuerName: "Example",
+      registrationNumber: "T7000012050002",
+      recipientName: "Sample",
+      date: "2026-02-30",
+      items: [{ description: "Service", rate: 10, amount: 1000 }],
+      totals: [{ rate: 10, amount: 1000, tax: 100 }],
+    },
+  });
+  assert.equal(json.ok, false);
+  assert.ok(json.problems.some((problem) => problem.startsWith("date must")));
+});
+
 test("invoice tax", async () => {
   const { json } = await call("japan_invoice_tax", {
     items: [

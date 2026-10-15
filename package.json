@@ -1,6 +1,6 @@
 {
   "name": "japan-invoice-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for Japanese invoices (インボイス制度): registration number check, consumption tax by rate, withholding tax. Offline, no API keys.",
   "type": "module",
   "bin": {
@@ -8,7 +8,8 @@
   },
   "exports": "./src/index.js",
   "files": [
-    "src"
+    "src",
+    "MAINTENANCE.md"
   ],
   "engines": {
     "node": ">=18"
@@ -16,7 +17,9 @@
   "scripts": {
     "test": "node --test",
     "lint": "biome check .",
-    "format": "biome check --write ."
+    "format": "biome check --write .",
+    "demo": "node examples/demo.js",
+    "verify:package": "node scripts/verify-package.js"
   },
   "keywords": [
     "mcp",

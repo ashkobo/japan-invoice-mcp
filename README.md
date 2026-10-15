@@ -65,15 +65,38 @@ Withholding, with the consumption tax shown separately on the invoice:
 
 ## As a library
 
+<!-- readme-trial: library -->
 ```js
+import assert from "node:assert/strict";
 import { parseNumber, invoiceTax, withholdingTax, grossUp } from "japan-invoice-mcp";
 
-parseNumber("T7000-0120-50002").valid;                            // true
-invoiceTax([{ amount: 60000, rate: 10 }, { amount: 40000, rate: 8 }],
-  { prices: "inclusive" }).total.tax;                              // 8416
-withholdingTax(1_500_000).withholding;                             // 204200
-grossUp(99_790).fee;                                               // 100000
+assert.equal(parseNumber("T7000-0120-50002").valid, true);
+assert.equal(invoiceTax([{ amount: 60000, rate: 10 }, { amount: 40000, rate: 8 }],
+  { prices: "inclusive" }).total.tax, 8416);
+assert.equal(withholdingTax(1_500_000).withholding, 204200);
+assert.equal(grossUp(99_790).fee, 100000);
 ```
+
+## Try a rounding check
+
+Ask the connected agent to "Calculate invoice tax on three 105-yen items, all at 10%, tax exclusive."
+It should call `japan_invoice_tax` and return 31 yen, with the per-line rounding warning.
+From a source checkout, `npm run demo` asserts this result, withholding and invalid-date rejection.
+
+Use this for deterministic calculations inside an agent or your own invoice workflow.
+It does not issue an invoice, maintain your books, file tax returns, or verify registration
+against the government master. If those are your tasks, use accounting software or the
+[official registration service](https://www.invoice-kohyo.nta.go.jp/).
+Number validation alone also has alternatives, such as
+[mcp-jp-corporate-id](https://github.com/skypier-jp-works/mcp-jp-corporate-id).
+This tool adds per-rate tax, withholding and structured field checks; compare that scope
+against what you actually need.
+
+The structured `checkInvoice` / `japan_invoice_check` input uses a real `YYYY-MM-DD` transaction
+date. Impossible dates, timestamps and ambiguous date strings are rejected. `ok: true` covers
+the supplied fields and checked arithmetic; it does not prove the transaction occurred,
+the issuer is registered, or the supplied reduced-tax classification is legally correct.
+It does not parse a PDF, perform OCR, or determine every legal exception.
 
 ## Notes
 
@@ -97,3 +120,14 @@ AI エージェントにインボイスの計算をさせるための MCP サー
 ## License
 
 MIT
+
+## Verify and maintain
+
+`npm run verify:package` installs a real tarball in a fresh consumer and checks the API demo
+and MCP connection. `npm test` checks official calculation examples and regression cases.
+See [MAINTENANCE.md](MAINTENANCE.md) for annual rule review, official references and release checks.
+
+If tools do not appear, confirm Node.js 18+, check the client configuration and restart it.
+An unsupported rate or fractional yen amount is an input error: choose a supported rate and
+the documented unit-price/quantity interface where needed. A valid number with no registration
+record must be confirmed on the official service; the offline check cannot resolve that.

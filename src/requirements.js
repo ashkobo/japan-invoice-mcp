@@ -62,6 +62,9 @@ export function checkInvoice(invoice, { simplified = false } = {}) {
 
   // 2–3. Date and what was sold
   need(filled(invoice.date), "date", 1);
+  if (filled(invoice.date) && !isCalendarDate(invoice.date)) {
+    problems.push("date must be a real calendar date in YYYY-MM-DD format.");
+  }
   need(items.length > 0, "items", 2);
   items.forEach((item, i) => {
     need(filled(item?.description), `items[${i}].description`, 2);
@@ -96,6 +99,12 @@ export function checkInvoice(invoice, { simplified = false } = {}) {
 
 // PRIVATE
 // ---------------------------------------------------------------------------
+
+function isCalendarDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value.startsWith("0000")) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 
 // The stated total must match the items, and the stated tax must be the exact tax rounded down
 // or up: any rounding is allowed, but only once per rate.

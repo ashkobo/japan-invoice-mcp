@@ -31,6 +31,29 @@ test("a complete 適格請求書 passes", () => {
   assert.match(r.reminder, /軽減税率/);
 });
 
+test("transaction dates must exist and use an unambiguous ISO date", () => {
+  for (const date of [
+    "2026-02-30",
+    "2025-02-29",
+    "2026-13-01",
+    "0000-01-01",
+    "tomorrow",
+    "2026-1-01",
+    "2026-10-15T00:00:00Z",
+    "2026-10-15 ",
+  ]) {
+    const result = checkInvoice({ ...GOOD, date });
+    assert.equal(result.ok, false, date);
+    assert.ok(
+      result.problems.some((problem) => problem.startsWith("date must")),
+      date,
+    );
+  }
+  for (const date of ["2024-02-29", "2026-10-15", "2000-02-29"]) {
+    assert.equal(checkInvoice({ ...GOOD, date }).ok, true, date);
+  }
+});
+
 test("rounding up once per rate is allowed too", () => {
   const totals = [
     { rate: 10, amount: 60000, tax: 5455 },
